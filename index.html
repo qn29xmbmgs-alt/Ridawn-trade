@@ -25,6 +25,7 @@
             --text-secondary: #a0aec0;
             --accent-blue: #2563eb;
             --hover-bg: #252d3d;
+            --kite-orange: #ff6b35;
         }
 
         body {
@@ -35,7 +36,6 @@
             min-height: 100vh;
         }
 
-        /* Header */
         .header {
             background: var(--card-bg);
             border-bottom: 1px solid var(--border-color);
@@ -149,14 +149,52 @@
             transform: translateY(-1px);
         }
 
-        /* Main Container */
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-kite {
+            background: linear-gradient(135deg, var(--kite-orange) 0%, #f7931e 100%);
+            border-color: var(--kite-orange);
+            color: white;
+        }
+
+        .btn-kite:hover {
+            background: linear-gradient(135deg, #f7931e 0%, var(--kite-orange) 100%);
+        }
+
+        .btn-kite.connected {
+            background: linear-gradient(135deg, var(--primary-green) 0%, #22c55e 100%);
+            border-color: var(--primary-green);
+        }
+
         .main-container {
             max-width: 1800px;
             margin: 0 auto;
             padding: 30px 40px;
         }
 
-        /* Ticker Section */
+        .auth-banner {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(247, 147, 30, 0.15) 100%);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .auth-banner h3 {
+            color: var(--kite-orange);
+            margin-bottom: 10px;
+        }
+
+        .auth-banner p {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
         .ticker-section {
             background: var(--card-bg);
             border-radius: 12px;
@@ -219,14 +257,12 @@
             gap: 4px;
         }
 
-        /* Main Grid */
         .main-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 24px;
         }
 
-        /* Index Cards */
         .index-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -345,7 +381,6 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* Loading */
         .loading {
             position: fixed;
             top: 0;
@@ -378,7 +413,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Share Modal */
         .modal {
             display: none;
             position: fixed;
@@ -461,7 +495,6 @@
             background: var(--border-color);
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -477,7 +510,6 @@
             }
         }
 
-        /* Last updated indicator */
         .last-updated {
             position: fixed;
             bottom: 20px;
@@ -490,15 +522,46 @@
             color: var(--text-secondary);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
+        .data-source {
+            font-size: 0.7rem;
+            color: var(--primary-green);
+            margin-top: 4px;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(22, 163, 74, 0.15);
+            border: 1px solid var(--primary-green);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: var(--primary-green);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
     <div class="loading" id="loading">
         <div class="spinner"></div>
     </div>
 
-    <!-- Header -->
     <header class="header">
         <div class="header-content">
             <h1 class="logo">RIDAWN <span class="logo-accent">STOCK EXCHANGE</span></h1>
@@ -512,6 +575,9 @@
             </div>
 
             <div class="controls">
+                <button class="btn btn-kite" id="kiteBtn" onclick="connectKite()">
+                    <span>🔗</span> Connect Kite
+                </button>
                 <button class="btn" onclick="enterFullscreen()">
                     <span>⛶</span> Fullscreen
                 </button>
@@ -525,26 +591,26 @@
         </div>
     </header>
 
-    <!-- Main Dashboard -->
     <main class="main-container">
-        <!-- Ticker Section -->
+        <div id="authBanner" class="auth-banner">
+            <h3>🔐 Zerodha Kite Authentication Required</h3>
+            <p>Click "Connect Kite" button above to authenticate with your Zerodha account</p>
+            <p style="font-size: 0.8rem;">After authentication, you'll get real-time spot market data with zero lag</p>
+        </div>
+
         <div class="ticker-section">
             <div class="ticker-container">
-                <div class="ticker-track" id="tickerTrack">
-                    <!-- Ticker items will be dynamically added -->
-                </div>
+                <div class="ticker-track" id="tickerTrack"></div>
             </div>
         </div>
 
-        <!-- Main 4 Indices Grid -->
         <div class="main-grid">
-            <!-- NIFTY 50 -->
             <div class="index-card">
                 <div class="card-header">
                     <h2 class="card-title">NIFTY 50</h2>
                     <span class="card-icon">📊</span>
                 </div>
-                <div class="card-value" id="nifty50-value">---</div>
+                <div class="card-value" id="nifty50-value">Waiting for data...</div>
                 <div class="card-change" id="nifty50-change"></div>
                 <div class="card-meta">
                     <div class="meta-item">
@@ -562,13 +628,12 @@
                 </div>
             </div>
 
-            <!-- BANK NIFTY -->
             <div class="index-card">
                 <div class="card-header">
                     <h2 class="card-title">BANK NIFTY</h2>
                     <span class="card-icon">🏦</span>
                 </div>
-                <div class="card-value" id="banknifty-value">---</div>
+                <div class="card-value" id="banknifty-value">Waiting for data...</div>
                 <div class="card-change" id="banknifty-change"></div>
                 <div class="card-meta">
                     <div class="meta-item">
@@ -586,13 +651,12 @@
                 </div>
             </div>
 
-            <!-- NIFTY MIDCAP -->
             <div class="index-card">
                 <div class="card-header">
                     <h2 class="card-title">NIFTY MIDCAP 50</h2>
                     <span class="card-icon">📈</span>
                 </div>
-                <div class="card-value" id="niftymidcap-value">---</div>
+                <div class="card-value" id="niftymidcap-value">Waiting for data...</div>
                 <div class="card-change" id="niftymidcap-change"></div>
                 <div class="card-meta">
                     <div class="meta-item">
@@ -610,13 +674,12 @@
                 </div>
             </div>
 
-            <!-- SENSEX -->
             <div class="index-card">
                 <div class="card-header">
                     <h2 class="card-title">SENSEX</h2>
                     <span class="card-icon">💹</span>
                 </div>
-                <div class="card-value" id="sensex-value">---</div>
+                <div class="card-value" id="sensex-value">Waiting for data...</div>
                 <div class="card-change" id="sensex-change"></div>
                 <div class="card-meta">
                     <div class="meta-item">
@@ -636,10 +699,15 @@
         </div>
     </main>
 
-    <!-- Last Updated Indicator -->
-    <div class="last-updated" id="lastUpdated">Last updated: Never</div>
+    <div class="last-updated" id="lastUpdated">
+        <div class="live-indicator" id="liveIndicator" style="display: none;">
+            <span class="live-dot"></span>
+            LIVE
+        </div>
+        Last updated: Never
+        <div class="data-source" id="dataSource">Waiting for authentication...</div>
+    </div>
 
-    <!-- Share Modal -->
     <div class="modal" id="shareModal">
         <div class="modal-content">
             <h2 class="modal-title">Share Dashboard</h2>
@@ -653,93 +721,109 @@
     </div>
 
     <script>
-        // Configuration
-        const UPDATE_INTERVAL = 10000; // 10 seconds
-        const NSE_API_BASE = 'https://www.nseindia.com/api';
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
-        
-        // Index symbols mapping for NSE
-        const INDEX_SYMBOLS = {
-            nifty50: 'NIFTY 50',
-            banknifty: 'NIFTY BANK',
-            niftymidcap: 'NIFTY MIDCAP 50',
-            sensex: 'SENSEX'
-        };
-        
-        // Other indices for ticker
-        const otherIndices = [
-            { name: 'NIFTY IT', code: 'CNX IT' },
-            { name: 'NIFTY PHARMA', code: 'NIFTY PHARMA' },
-            { name: 'NIFTY AUTO', code: 'NIFTY AUTO' },
-            { name: 'NIFTY FMCG', code: 'NIFTY FMCG' },
-            { name: 'NIFTY METAL', code: 'NIFTY METAL' },
-            { name: 'NIFTY REALTY', code: 'NIFTY REALTY' },
-            { name: 'NIFTY ENERGY', code: 'NIFTY ENERGY' },
-            { name: 'NIFTY INFRA', code: 'NIFTY INFRA' },
-            { name: 'NIFTY PSU BANK', code: 'NIFTY PSU BANK' },
-            { name: 'NIFTY PVT BANK', code: 'NIFTY PVT BANK' },
-            { name: 'NIFTY MEDIA', code: 'NIFTY MEDIA' },
-            { name: 'NIFTY SMALLCAP', code: 'NIFTY SMLCAP 100' }
-        ];
+        const KITE_API_KEY = 'pkm8pph0jjj3h1im';
+        const API_BASE = '/.netlify/functions';
+        const UPDATE_INTERVAL = 2000; // 2 seconds
 
-        // State to persist last values
         const state = {
             lastData: {},
-            isMarketOpen: false
+            todayClosingData: {},
+            isMarketOpen: false,
+            lastSource: 'Zerodha Kite API',
+            accessToken: null,
+            updateInterval: null
         };
 
-        // Initialize
+        const otherIndices = [
+            'NIFTY IT', 'NIFTY PHARMA', 'NIFTY AUTO', 'NIFTY FMCG', 'NIFTY METAL',
+            'NIFTY REALTY', 'NIFTY ENERGY', 'NIFTY INFRA', 'NIFTY PSU BANK',
+            'NIFTY PVT BANK', 'NIFTY MEDIA', 'NIFTY SMALLCAP'
+        ];
+
         function init() {
+            console.log('Dashboard initializing...');
             loadPersistedData();
             initializeTicker();
             updateTime();
             updateMarketStatus();
-            fetchData();
+            
+            // Check for Kite OAuth callback
+            handleKiteCallback();
+            
+            // Check for stored token
+            const storedToken = localStorage.getItem('kite_access_token');
+            const tokenDate = localStorage.getItem('kite_token_date');
+            const today = new Date().toDateString();
+            
+            if (storedToken && tokenDate === today) {
+                console.log('Found stored access token');
+                state.accessToken = storedToken;
+                updateKiteButton(true);
+                startRealTimeUpdates();
+                document.getElementById('authBanner').style.display = 'none';
+            } else {
+                console.log('No valid token found - showing auth banner');
+                localStorage.removeItem('kite_access_token');
+                localStorage.removeItem('kite_token_date');
+                document.getElementById('authBanner').style.display = 'block';
+            }
             
             setInterval(updateTime, 1000);
             setInterval(updateMarketStatus, 60000);
-            setInterval(fetchData, UPDATE_INTERVAL);
             
             setTimeout(() => {
                 document.getElementById('loading').classList.add('hidden');
             }, 1000);
         }
 
-        // Load persisted data from localStorage
         function loadPersistedData() {
             try {
                 const saved = localStorage.getItem('ridawn_indices_data');
+                const closing = localStorage.getItem('ridawn_closing_data');
+                const closingDate = localStorage.getItem('ridawn_closing_date');
+                
                 if (saved) {
                     state.lastData = JSON.parse(saved);
                     updateDisplay(state.lastData);
                 }
+                
+                const today = new Date().toDateString();
+                if (closing && closingDate === today) {
+                    state.todayClosingData = JSON.parse(closing);
+                }
             } catch (error) {
-                console.error('Error loading persisted data:', error);
+                console.error('Error loading data:', error);
             }
         }
 
-        // Save data to localStorage
-        function saveData(data) {
+        function saveData(data, isClosing = false) {
             try {
-                localStorage.setItem('ridawn_indices_data', JSON.stringify(data));
+                if (isClosing) {
+                    const today = new Date().toDateString();
+                    localStorage.setItem('ridawn_closing_data', JSON.stringify(data));
+                    localStorage.setItem('ridawn_closing_date', today);
+                    state.todayClosingData = data;
+                    console.log('Saved closing prices for', today);
+                } else {
+                    localStorage.setItem('ridawn_indices_data', JSON.stringify(data));
+                }
             } catch (error) {
                 console.error('Error saving data:', error);
             }
         }
 
-        // Initialize ticker
         function initializeTicker() {
             const track = document.getElementById('tickerTrack');
-            const items = [...otherIndices, ...otherIndices]; // Duplicate for seamless loop
+            const items = [...otherIndices, ...otherIndices];
             
-            items.forEach(index => {
+            items.forEach(name => {
                 const item = document.createElement('div');
                 item.className = 'ticker-item';
                 const change = (Math.random() * 4 - 2).toFixed(2);
                 const isPositive = parseFloat(change) >= 0;
                 
                 item.innerHTML = `
-                    <div class="ticker-name">${index.name}</div>
+                    <div class="ticker-name">${name}</div>
                     <div class="ticker-value">${(Math.random() * 20000 + 5000).toFixed(2)}</div>
                     <div class="ticker-change ${isPositive ? 'change-positive' : 'change-negative'}">
                         ${isPositive ? '▲' : '▼'} ${Math.abs(change)}%
@@ -749,13 +833,11 @@
             });
         }
 
-        // Update time
         function updateTime() {
             const now = new Date();
             document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('en-IN');
         }
 
-        // Update market status
         function updateMarketStatus() {
             const now = new Date();
             const day = now.getDay();
@@ -763,207 +845,133 @@
             const mins = now.getMinutes();
             const totalMins = hours * 60 + mins;
             
+            const wasOpen = state.isMarketOpen;
             const isOpen = day > 0 && day < 6 && totalMins >= 555 && totalMins <= 930;
             state.isMarketOpen = isOpen;
+            
+            if (wasOpen && !isOpen && Object.keys(state.lastData).length > 0) {
+                saveData(state.lastData, true);
+            }
             
             const statusEl = document.getElementById('marketStatus');
             statusEl.className = isOpen ? 'market-status market-open' : 'market-status market-closed';
             statusEl.innerHTML = isOpen 
                 ? '<span class="status-dot"></span> MARKET OPEN' 
                 : '<span class="status-dot"></span> MARKET CLOSED';
-        }
-
-        // Fetch data from NSE India
-        async function fetchFromNSE(indexName) {
-            try {
-                // Try multiple NSE endpoints
-                const endpoints = [
-                    `${CORS_PROXY}${encodeURIComponent(`${NSE_API_BASE}/allIndices`)}`,
-                    `${CORS_PROXY}${encodeURIComponent('https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050')}`
-                ];
-                
-                for (const url of endpoints) {
-                    try {
-                        const response = await fetch(url, {
-                            headers: {
-                                'Accept': 'application/json',
-                                'User-Agent': 'Mozilla/5.0'
-                            }
-                        });
-                        
-                        if (!response.ok) continue;
-                        
-                        const data = await response.json();
-                        
-                        // Parse NSE response
-                        if (data && data.data) {
-                            const indexData = data.data.find(item => 
-                                item.index === indexName || item.indexName === indexName
-                            );
-                            
-                            if (indexData) {
-                                const currentPrice = parseFloat(indexData.last || indexData.lastPrice || indexData.lasttradeprice);
-                                const prevClose = parseFloat(indexData.previousClose || indexData.prevClose);
-                                const open = parseFloat(indexData.open || indexData.openValue);
-                                const high = parseFloat(indexData.high || indexData.dayHigh);
-                                const low = parseFloat(indexData.low || indexData.dayLow);
-                                
-                                return {
-                                    value: currentPrice,
-                                    change: currentPrice - prevClose,
-                                    percentChange: parseFloat(indexData.percentChange || indexData.pChange || ((currentPrice - prevClose) / prevClose * 100)),
-                                    open: open,
-                                    high: high,
-                                    low: low,
-                                    prevClose: prevClose,
-                                    timestamp: new Date()
-                                };
-                            }
-                        }
-                    } catch (e) {
-                        continue;
-                    }
-                }
-                return null;
-            } catch (error) {
-                console.error('NSE fetch error:', error);
-                return null;
-            }
-        }
-        
-        // Fetch from alternative free API
-        async function fetchFromAlternativeAPI(key) {
-            try {
-                const symbolMap = {
-                    nifty50: 'NIFTY',
-                    banknifty: 'BANKNIFTY',
-                    niftymidcap: 'NIFTYMIDCAP50',
-                    sensex: 'SENSEX'
-                };
-                
-                const url = `https://latest-stock-price.p.rapidapi.com/price?Indices=${symbolMap[key]}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data && data.length > 0) {
-                    const item = data[0];
-                    return {
-                        value: item.lastPrice,
-                        change: item.change,
-                        percentChange: item.pChange,
-                        open: item.open,
-                        high: item.dayHigh,
-                        low: item.dayLow,
-                        prevClose: item.previousClose,
-                        timestamp: new Date()
-                    };
-                }
-                return null;
-            } catch (error) {
-                console.error('Alternative API error:', error);
-                return null;
+            
+            const liveIndicator = document.getElementById('liveIndicator');
+            if (liveIndicator) {
+                liveIndicator.style.display = (isOpen && state.accessToken) ? 'inline-flex' : 'none';
             }
         }
 
-        // Generate realistic mock data based on actual last closing prices
-        function generateMockData(key) {
-            // Actual closing prices from November 7, 2025
-            const actualClosingPrices = {
-                nifty50: 25492.30,
-                banknifty: 57876.80,
-                niftymidcap: 17030.90,
-                sensex: 83216.28
-            };
-
-            const lastValue = state.lastData[key]?.value || actualClosingPrices[key];
-            const prevClose = state.lastData[key]?.prevClose || actualClosingPrices[key];
-            
-            // Very small variation when market is closed (to maintain last prices)
-            const variation = state.isMarketOpen ? (lastValue * (Math.random() * 0.02 - 0.01)) : 0;
-            const value = lastValue + variation;
-            
-            const open = state.lastData[key]?.open || value * (1 + (Math.random() * 0.005 - 0.0025));
-            const high = state.lastData[key]?.high || Math.max(value, open) * (1 + Math.random() * 0.005);
-            const low = state.lastData[key]?.low || Math.min(value, open) * (1 - Math.random() * 0.005);
-            
-            return {
-                value: value,
-                change: value - prevClose,
-                percentChange: ((value - prevClose) / prevClose) * 100,
-                open: open,
-                high: high,
-                low: low,
-                prevClose: prevClose,
-                timestamp: new Date()
-            };
+        function connectKite() {
+            console.log('Connecting to Kite...');
+            const authUrl = `https://kite.zerodha.com/connect/login?api_key=${KITE_API_KEY}&v=3`;
+            console.log('Redirecting to:', authUrl);
+            window.location.href = authUrl;
         }
 
-        // Fetch data
-        async function fetchData() {
-            try {
-                const data = {};
-                let fetchedAny = false;
-                
-                // Only attempt to fetch if market is open
-                if (state.isMarketOpen) {
-                    // Try to fetch from NSE for each index
-                    for (const [key, indexName] of Object.entries(INDEX_SYMBOLS)) {
-                        let indexData = await fetchFromNSE(indexName);
-                        
-                        // Fallback to alternative API
-                        if (!indexData) {
-                            indexData = await fetchFromAlternativeAPI(key);
-                        }
-                        
-                        if (indexData && indexData.value) {
-                            data[key] = indexData;
-                            fetchedAny = true;
-                        }
-                    }
-                }
-                
-                // If market is closed OR API failed, use last known data
-                if (!fetchedAny || !state.isMarketOpen) {
-                    // Check if we have persisted data
-                    if (Object.keys(state.lastData).length > 0) {
-                        // Use last known values
-                        Object.keys(INDEX_SYMBOLS).forEach(key => {
-                            data[key] = state.lastData[key] || generateMockData(key);
-                        });
-                    } else {
-                        // First load - use actual closing prices
-                        Object.keys(INDEX_SYMBOLS).forEach(key => {
-                            data[key] = generateMockData(key);
-                        });
-                    }
-                }
+        function handleKiteCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const requestToken = urlParams.get('request_token');
+            
+            if (requestToken) {
+                console.log('Request token received:', requestToken);
+                getAccessToken(requestToken);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
 
-                // Update state and localStorage with valid data
-                Object.keys(data).forEach(key => {
-                    if (data[key] && data[key].value) {
-                        state.lastData[key] = data[key];
-                    }
+        async function getAccessToken(requestToken) {
+            try {
+                console.log('Exchanging request token for access token...');
+                const response = await fetch(`${API_BASE}/kite-auth`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ requestToken })
                 });
+
+                const data = await response.json();
+                console.log('Auth response:', data);
                 
-                saveData(state.lastData);
-                updateDisplay(state.lastData);
-                updateLastUpdated();
+                if (data.status === 'success' && data.data.access_token) {
+                    state.accessToken = data.data.access_token;
+                    const today = new Date().toDateString();
+                    localStorage.setItem('kite_access_token', data.data.access_token);
+                    localStorage.setItem('kite_token_date', today);
+                    console.log('✅ Authentication successful!');
+                    updateKiteButton(true);
+                    document.getElementById('authBanner').style.display = 'none';
+                    startRealTimeUpdates();
+                } else {
+                    console.error('Authentication failed:', data);
+                    alert('Failed to authenticate with Kite. Please try again.');
+                }
+            } catch (error) {
+                console.error('Authentication error:', error);
+                alert('Authentication error. Please try again.');
+            }
+        }
+
+        function updateKiteButton(connected) {
+            const btn = document.getElementById('kiteBtn');
+            if (connected) {
+                btn.innerHTML = '<span>✓</span> Kite Connected';
+                btn.classList.add('connected');
+                btn.onclick = null;
+                btn.style.cursor = 'default';
+            } else {
+                btn.innerHTML = '<span>🔗</span> Connect Kite';
+                btn.classList.remove('connected');
+                btn.onclick = connectKite;
+                btn.style.cursor = 'pointer';
+            }
+        }
+
+        function startRealTimeUpdates() {
+            console.log('Starting real-time updates...');
+            fetchKiteData();
+            
+            if (state.updateInterval) {
+                clearInterval(state.updateInterval);
+            }
+            
+            state.updateInterval = setInterval(() => {
+                if (state.isMarketOpen) {
+                    fetchKiteData();
+                }
+            }, UPDATE_INTERVAL);
+        }
+
+        async function fetchKiteData() {
+            try {
+                console.log('Fetching data from Kite API...');
+                const response = await fetch(`${API_BASE}/kite-data`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Data received:', data);
+                    
+                    if (data && Object.keys(data).length > 0 && !data.error) {
+                        state.lastData = data;
+                        saveData(data);
+                        updateDisplay(data);
+                        updateLastUpdated();
+                        state.lastSource = 'Zerodha Kite (Real-time)';
+                    } else {
+                        console.error('Invalid data received:', data);
+                    }
+                } else {
+                    console.error('API error:', response.status);
+                }
             } catch (error) {
                 console.error('Fetch error:', error);
-                // On error, display last known values
-                if (Object.keys(state.lastData).length > 0) {
-                    updateDisplay(state.lastData);
-                } else {
-                    // Use actual closing prices as fallback
-                    Object.keys(INDEX_SYMBOLS).forEach(key => {
-                        state.lastData[key] = generateMockData(key);
-                    });
-                    updateDisplay(state.lastData);
-                }
             }
         }
 
-        // Update display
         function updateDisplay(data) {
             Object.keys(data).forEach(key => {
                 const d = data[key];
@@ -974,7 +982,6 @@
                 const percent = d.percentChange || 0;
                 const isPositive = change >= 0;
                 
-                // Update value
                 const valueEl = document.getElementById(`${key}-value`);
                 if (valueEl) {
                     valueEl.textContent = value.toLocaleString('en-IN', {
@@ -983,7 +990,6 @@
                     });
                 }
                 
-                // Update change
                 const changeEl = document.getElementById(`${key}-change`);
                 if (changeEl) {
                     const arrow = isPositive ? '▲' : '▼';
@@ -992,12 +998,14 @@
                     
                     changeEl.innerHTML = `
                         <span class="change-badge ${badgeClass}">
+                            ${arrow} ${sign}${Math.abs(change).toFixed(2)}
+                        </span>
+                        <span class="change-badge ${badgeClass}">
                             ${sign}${Math.abs(percent).toFixed(2)}%
                         </span>
                     `;
                 }
                 
-                // Update meta values
                 ['open', 'high', 'low'].forEach(field => {
                     const metaEl = document.getElementById(`${key}-${field}`);
                     if (metaEl && d[field]) {
@@ -1010,33 +1018,35 @@
             });
         }
 
-        // Update last updated time
         function updateLastUpdated() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-IN');
-            document.getElementById('lastUpdated').textContent = `Last updated: ${timeStr}`;
+            const showLive = state.isMarketOpen && state.accessToken;
+            
+            document.getElementById('lastUpdated').innerHTML = `
+                <div class="live-indicator" style="display: ${showLive ? 'inline-flex' : 'none'}">
+                    <span class="live-dot"></span>
+                    LIVE
+                </div>
+                Last updated: ${timeStr}
+                <div class="data-source">${state.lastSource}</div>
+            `;
         }
 
-        // Refresh data
         async function refreshData() {
             const btn = event.target;
-            const originalText = btn.innerHTML;
+            const originalHTML = btn.innerHTML;
             btn.innerHTML = '<span>⟳</span> Updating...';
             btn.disabled = true;
             
-            try {
-                await fetchData();
-            } catch (error) {
-                console.error('Refresh error:', error);
-            }
+            await fetchKiteData();
             
             setTimeout(() => {
-                btn.innerHTML = originalText;
+                btn.innerHTML = originalHTML;
                 btn.disabled = false;
             }, 1000);
         }
 
-        // Fullscreen
         function enterFullscreen() {
             const elem = document.documentElement;
             if (elem.requestFullscreen) {
@@ -1048,7 +1058,6 @@
             }
         }
 
-        // Share modal
         function openShareModal() {
             document.getElementById('shareUrl').value = window.location.href;
             document.getElementById('shareModal').classList.add('active');
@@ -1072,18 +1081,19 @@
             }, 1500);
         }
 
-        // Handle visibility changes
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                fetchData();
+            if (!document.hidden && state.accessToken) {
+                fetchKiteData();
             }
         });
 
-        // Start app
+        window.addEventListener('beforeunload', () => {
+            if (state.updateInterval) {
+                clearInterval(state.updateInterval);
+            }
+        });
+
         window.addEventListener('load', init);
     </script>
 </body>
 </html>
-                            ${arrow} ${sign}${Math.abs(change).toFixed(2)}
-                        </span>
-                        <span class="change-badge ${badgeClass}">
