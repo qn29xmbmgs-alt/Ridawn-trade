@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Get Kite Access Token</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #f7931e;
+        }
+        .token-display {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            word-wrap: break-word;
+            margin-top: 20px;
+            display: none;
+        }
+        .success {
+            color: #16a34a;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Get Kite Access Token</h1>
+        <p>Click the button below to login to Zerodha Kite and get your access token.</p>
+        
+        <button onclick="loginToKite()">Login to Zerodha Kite</button>
+        
+        <div id="tokenDisplay" class="token-display">
+            <h3>Your Access Token:</h3>
+            <p id="tokenValue"></p>
+            <button onclick="copyToken()">Copy Token</button>
+            <p class="success" id="copyMessage" style="display:none;">✓ Token copied to clipboard!</p>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'pkm8pph0jjj3h1im';
+        const API_SECRET = '8wbrzvda9k2f1ieo0p1g4kte49temr1k';
+        const REDIRECT_URI = window.location.origin + '/get-token.html';
+
+        function loginToKite() {
+            const authUrl = `https://kite.zerodha.com/connect/login?api_key=${API_KEY}&v=3`;
+            window.location.href = authUrl;
+        }
+
+        async function handleCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const requestToken = urlParams.get('request_token');
+            
+            if (requestToken) {
+                try {
+                    // Generate checksum
+                    const message = API_KEY + requestToken + API_SECRET;
+                    const msgBuffer = new TextEncoder().encode(message);
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const checksum = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+                    // Exchange for access token
+                    const response = await fetch('https://api.kite.trade/session/token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Kite-Version': '3'
+                        },
+                        body: new URLSearchParams({
+                            'api_key': API_KEY,
+                            'request_token': requestToken,
+                            'checksum': checksum
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.status === 'success' && data.data.access_token) {
+                        displayToken(data.data.access_token);
+                    } else {
+                        alert('Failed to get access token: ' + JSON.stringify(data));
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        function displayToken(token) {
+            document.getElementById('tokenValue').textContent = token;
+            document.getElementById('tokenDisplay').style.display = 'block';
+        }
+
+        function copyToken() {
+            const token = document.getElementById('tokenValue').textContent;
+            navigator.clipboard.writeText(token).then(() => {
+                document.getElementById('copyMessage').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('copyMessage').style.display = 'none';
+                }, 3000);
+            });
+        }
+
+        window.addEventListener('load', handleCallback);
+    </script>
+</body>
+</html>
