@@ -1,0 +1,36 @@
+name: Token Refresh Reminder
+
+on:
+  schedule:
+    - cron: '30 0 * * *'  # 6:00 AM IST daily (0:30 UTC)
+  workflow_dispatch:
+
+jobs:
+  send-reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Email Reminder
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: '⚠️ Ridawn Dashboard - Token Refresh Required'
+          body: |
+            Hello,
+            
+            Your Zerodha Kite access token has expired.
+            
+            Please refresh the token:
+            1. Visit: https://your-site.netlify.app/admin.html
+            2. Click "Get New Token"
+            3. Copy the token
+            4. Update KITE_ACCESS_TOKEN in Netlify
+            
+            This ensures real-time data continues working for all users.
+            
+            Best regards,
+            Ridawn Dashboard System
+          to: your-email@example.com
+          from: Ridawn Dashboard
