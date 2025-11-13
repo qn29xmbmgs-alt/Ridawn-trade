@@ -1,125 +1,88 @@
-export default async function handler(req, res) {
-  // CORS headers - MUST be set first
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+const KiteConnect = require("kiteconnect").KiteConnect;
 
-  // Handle preflight
+export default async function handler(req, res) {
+  // 1. Handle Preflight (CORS)
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   try {
+    // 2. Read all environment variables
     const API_KEY = process.env.KITE_API_KEY;
+    const API_SECRET = process.env.KITE_API_SECRET;
     const ACCESS_TOKEN = process.env.KITE_ACCESS_TOKEN;
 
+    // 3. Extract request_token from URL (sent by Admin page)
+    const { request_token } = req.query;
+
     console.log('=== Function Start ===');
-    console.log('Method:', req.method);
-    console.log('API_KEY exists:', !!API_KEY);
-    console.log('ACCESS_TOKEN exists:', !!ACCESS_TOKEN);
+    console.log('Mode:', request_token ? 'TOKEN GENERATION' : 'DATA FETCHING');
+
+    // ------------------------------------------
+    // MODE A: GENERATE NEW TOKEN (Admin Page)
+    // ------------------------------------------
+    if (request_token) {
+      if (!API_KEY || !API_SECRET) {
+        console.error('Missing API Key or Secret for generation');
+        return res.status(500).json({ error: 'Configuration Error: KITE_API_KEY or KITE_API_SECRET is missing in Vercel Settings.' });
+      }
+
+      console.log('Attempting to generate session...');
+      const kc = new KiteConnect({ api_key: API_KEY });
+
+      try {
+        const response = await kc.generateSession(request_token, API_SECRET);
+        console.log('Session generated successfully!');
+        
+        // Return the new token to the Admin Page
+        return res.status(200).json({ 
+          status: 'success',
+          access_token: response.access_token,
+          public_token: response.public_token 
+        });
+      } catch (kiteError) {
+        console.error('Kite Session Error:', kiteError);
+        return res.status(400).json({ error: 'Failed to generate token. ' + (kiteError.message || kiteError) });
+      }
+    }
+
+    // ------------------------------------------
+    // MODE B: FETCH DATA (Dashboard)
+    // ------------------------------------------
+    
+    // If we are here, it means we are NOT generating a token.
+    // So we MUST have an existing ACCESS_TOKEN to proceed.
+    if (!ACCESS_TOKEN) {
+      console.error('Missing Access Token');
+      return res.status(500).json({ error: 'Access token not configured. Please go to Admin Panel to generate one.' });
+    }
 
     if (!API_KEY) {
-      console.error('Missing KITE_API_KEY');
-      return res.status(500).json({ error: 'API Key not configured' });
+        return res.status(500).json({ error: 'API Key not configured' });
     }
 
-    if (!ACCESS_TOKEN) {
-      console.log('No access token - this is expected before first auth');
-      return res.status(500).json({ error: 'Access token not configured. Please generate token via /admin.html' });
-    }
+    // Initialize Kite Connect with existing token
+    const kc = new KiteConnect({
+        api_key: API_KEY,
+        access_token: ACCESS_TOKEN
+    });
 
-    // Fetch from Kite API
+    // Example: Fetch Indices Data
+    // (You can customize this list or logic as per your original dashboard needs)
     const instruments = [
-      'NSE:NIFTY 50',
-      'NSE:NIFTY BANK', 
-      'NSE:NIFTY MIDCAP 50',
-      'BSE:SENSEX'
+        'NSE:NIFTY 50',
+        'NSE:NIFTY BANK',
+        'NSE:NIFTY MIDCAP 50',
+        'BSE:SENSEX'
     ];
 
-    const kiteUrl = `https://api.kite.trade/quote?i=${instruments.join('&i=')}`;
-    console.log('Calling Kite API...');
-
-    const kiteResponse = await fetch(kiteUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `token ${API_KEY}:${ACCESS_TOKEN}`,
-        'X-Kite-Version': '3',
-        'Accept': 'application/json'
-      }
-    });
-
-    console.log('Kite response status:', kiteResponse.status);
-
-    if (!kiteResponse.ok) {
-      const errorText = await kiteResponse.text();
-      console.error('Kite API error:', errorText);
-      return res.status(500).json({ 
-        error: `Kite API error: ${kiteResponse.status}`,
-        details: errorText 
-      });
-    }
-
-    const kiteData = await kiteResponse.json();
-    console.log('Kite data status:', kiteData.status);
-
-    if (kiteData.status !== 'success' || !kiteData.data) {
-      console.error('Invalid Kite response:', kiteData);
-      return res.status(500).json({ 
-        error: 'Invalid response from Kite',
-        kiteStatus: kiteData.status 
-      });
-    }
-
-    // Parse the data
-    const result = {
-      nifty50: parseQuote(kiteData.data['NSE:NIFTY 50']),
-      banknifty: parseQuote(kiteData.data['NSE:NIFTY BANK']),
-      niftymidcap: parseQuote(kiteData.data['NSE:NIFTY MIDCAP 50']),
-      sensex: parseQuote(kiteData.data['BSE:SENSEX'])
-    };
-
-    console.log('Success! Returning data');
-    return res.status(200).json(result);
+    // Fetch Quotes
+    const quotes = await kc.getQuote(instruments);
+    return res.status(200).json(quotes);
 
   } catch (error) {
-    console.error('=== ERROR ===');
-    console.error('Error name:', error.name);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
-    
-    return res.status(500).json({ 
-      error: 'Internal server error',
-      message: error.message,
-      type: error.name
-    });
+    console.error('Server Error:', error);
+    return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }
 
-function parseQuote(quote) {
-  if (!quote) {
-    console.warn('Quote data is missing');
-    return null;
-  }
-
-  try {
-    const lastPrice = quote.last_price || 0;
-    const prevClose = quote.ohlc?.close || lastPrice;
-    const open = quote.ohlc?.open || lastPrice;
-    const high = quote.ohlc?.high || lastPrice;
-    const low = quote.ohlc?.low || lastPrice;
-
-    return {
-      value: lastPrice,
-      change: lastPrice - prevClose,
-      percentChange: prevClose ? ((lastPrice - prevClose) / prevClose) * 100 : 0,
-      open: open,
-      high: high,
-      low: low,
-      prevClose: prevClose,
-      timestamp: new Date().toISOString()
-    };
-  } catch (error) {
-    console.error('Error parsing quote:', error);
-    return null;
-  }
-}
