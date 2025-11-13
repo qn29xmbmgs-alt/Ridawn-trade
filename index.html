@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ridawn Stock Exchange - Live Market Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #16a34a;
+            --primary-red: #dc2626;
+            --dark-bg: #0f1419;
+            --card-bg: #1a1f2e;
+            --border-color: #2d3748;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --accent-blue: #2563eb;
+            --hover-bg: #252d3d;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+
+        .logo-accent {
+            color: var(--accent-blue);
+        }
+
+        .header-info {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .time-display {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .market-status {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .market-open {
+            background: rgba(22, 163, 74, 0.15);
+            color: var(--primary-green);
+            border: 1px solid var(--primary-green);
+        }
+
+        .market-open .status-dot {
+            background: var(--primary-green);
+        }
+
+        .market-closed {
+            background: rgba(220, 38, 38, 0.15);
+            color: var(--primary-red);
+            border: 1px solid var(--primary-red);
+        }
+
+        .market-closed .status-dot {
+            background: var(--primary-red);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            background: var(--hover-bg);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .main-container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 30px 40px;
+        }
+
+        .ticker-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px 0;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .ticker-container {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ticker-track {
+            display: flex;
+            animation: scroll 30s linear infinite;
+            gap: 16px;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .ticker-item {
+            flex: 0 0 auto;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-right: 1px solid var(--border-color);
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .ticker-item:hover {
+            background: var(--hover-bg);
+        }
+
+        .ticker-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .ticker-value {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ticker-change {
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+
+        .index-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 28px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .index-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), transparent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s;
+        }
+
+        .index-card:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .index-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+
+        .card-icon {
+            font-size: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 16px 0;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -1px;
+        }
+
+        .card-change {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .change-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+
+        .change-positive {
+            background: rgba(22, 163, 74, 0.15);
+            color: var(--primary-green);
+        }
+
+        .change-negative {
+            background: rgba(220, 38, 38, 0.15);
+            color: var(--primary-red);
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-value {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .modal-text {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .share-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+        }
+
+        .share-options {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .share-btn {
+            padding: 10px 20px;
+            background: var(--accent-blue);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .share-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .share-btn.secondary {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        .share-btn.secondary:hover {
+            background: var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-value {
+                font-size: 2rem;
+            }
+        }
+
+        .last-updated {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-source {
+            font-size: 0.7rem;
+            color: var(--primary-green);
+            margin-top: 4px;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(22, 163, 74, 0.15);
+            border: 1px solid var(--primary-green);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: var(--primary-green);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <h1 class="logo">RIDAWN <span class="logo-accent">STOCK EXCHANGE</span></h1>
+            
+            <div class="header-info">
+                <div class="time-display" id="timeDisplay">00:00:00</div>
+                <div class="market-status market-closed" id="marketStatus">
+                    <span class="status-dot"></span>
+                    MARKET CLOSED
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn" onclick="enterFullscreen()">
+                    <span>⛶</span> Fullscreen
+                </button>
+                <button class="btn" onclick="refreshData()">
+                    <span>↻</span> Refresh
+                </button>
+                <button class="btn" onclick="openShareModal()">
+                    <span>📱</span> Share
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="ticker-section">
+            <div class="ticker-container">
+                <div class="ticker-track" id="tickerTrack"></div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="index-card">
+                <div class="card-header">
+                    <h2 class="card-title">NIFTY 50</h2>
+                    <span class="card-icon">📊</span>
+                </div>
+                <div class="card-value" id="nifty50-value">Loading...</div>
+                <div class="card-change" id="nifty50-change"></div>
+                <div class="card-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Open</span>
+                        <span class="meta-value" id="nifty50-open">---</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">High</span>
+                        <span class="meta-value" id="nifty50-high">---</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Low</span>
+                        <span class="meta-value" id="nifty50-low">---</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="index-card">
+                <div class="card-header">
+                    <h2 class="card-title">BANK NIFTY</h2>
+                    <span class="card-icon">🏦</span>
+                </div>
+                <div class="card-value" id="banknifty-value">Loading...</div>
+                <div class="card-change" id="banknifty-change"></div>
+                <div class="card-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Open</span>
+                        <span class="meta-value" id="banknifty-open">---</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">High</span>
+                        <span class="meta-value" id="banknifty-high">---</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Low</span>
+                        <span class="meta-value" id="banknifty-low">---</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="index-card">
+                <div class="card-header">
+                    <h2 class="card-title">NIFTY MIDCAP 50</h2>
+                    <span class="card-icon">📈</span>
+                </div>
+                <div class="card-value" id="niftymidcap-value">Loading...</div>
+                <div class="card-change" id="niftymidcap-change"></div>
+                <div class="card-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Open</span>
+                        <span class="meta-value" id="niftymidcap-open">---</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">High</span>
+                        <span class="meta-value" id="niftymidcap-high">---</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Low</span>
+                        <span class="meta-value" id="niftymidcap-low">---</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="index-card">
+                <div class="card-header">
+                    <h2 class="card-title">SENSEX</h2>
+                    <span class="card-icon">💹</span>
+                </div>
+                <div class="card-value" id="sensex-value">Loading...</div>
+                <div class="card-change" id="sensex-change"></div>
+                <div class="card-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Open</span>
+                        <span class="meta-value" id="sensex-open">---</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">High</span>
+                        <span class="meta-value" id="sensex-high">---</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Low</span>
+                        <span class="meta-value" id="sensex-low">---</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="last-updated" id="lastUpdated">
+        <div class="live-indicator" id="liveIndicator" style="display: none;">
+            <span class="live-dot"></span>
+            LIVE
+        </div>
+        Last updated: Never
+        <div class="data-source" id="dataSource">Fetching data...</div>
+    </div>
+
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Share Dashboard</h2>
+            <p class="modal-text">Share this URL to view the dashboard on any device:</p>
+            <input type="text" class="share-input" id="shareUrl" readonly>
+            <div class="share-options">
+                <button class="share-btn secondary" onclick="closeShareModal()">Cancel</button>
+                <button class="share-btn" onclick="copyUrl()">Copy URL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api'; // Changed from '/.netlify/functions' for Vercel
+        const UPDATE_INTERVAL = 2000; // 2 seconds
+
+        const state = {
+            lastData: {},
+            todayClosingData: {},
+            isMarketOpen: false,
+            lastSource: 'Zerodha Kite API'
+        };
+
+        const otherIndices = [
+            'NIFTY IT', 'NIFTY PHARMA', 'NIFTY AUTO', 'NIFTY FMCG', 'NIFTY METAL',
+            'NIFTY REALTY', 'NIFTY ENERGY', 'NIFTY INFRA', 'NIFTY PSU BANK',
+            'NIFTY PVT BANK', 'NIFTY MEDIA', 'NIFTY SMALLCAP'
+        ];
+
+        function init() {
+            loadPersistedData();
+            initializeTicker();
+            updateTime();
+            updateMarketStatus();
+            
+            // Start fetching data immediately
+            fetchKiteData();
+            
+            setInterval(updateTime, 1000);
+            setInterval(updateMarketStatus, 60000);
+            setInterval(fetchKiteData, UPDATE_INTERVAL);
+            
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+            }, 1000);
+        }
+
+        function loadPersistedData() {
+            try {
+                const saved = localStorage.getItem('ridawn_indices_data');
+                const closing = localStorage.getItem('ridawn_closing_data');
+                const closingDate = localStorage.getItem('ridawn_closing_date');
+                
+                if (saved) {
+                    state.lastData = JSON.parse(saved);
+                    updateDisplay(state.lastData);
+                }
+                
+                const today = new Date().toDateString();
+                if (closing && closingDate === today) {
+                    state.todayClosingData = JSON.parse(closing);
+                }
+            } catch (error) {}
+        }
+
+        function saveData(data, isClosing = false) {
+            try {
+                if (isClosing) {
+                    const today = new Date().toDateString();
+                    localStorage.setItem('ridawn_closing_data', JSON.stringify(data));
+                    localStorage.setItem('ridawn_closing_date', today);
+                    state.todayClosingData = data;
+                } else {
+                    localStorage.setItem('ridawn_indices_data', JSON.stringify(data));
+                }
+            } catch (error) {}
+        }
+
+        function initializeTicker() {
+            const track = document.getElementById('tickerTrack');
+            const items = [...otherIndices, ...otherIndices];
+            
+            items.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'ticker-item';
+                const change = (Math.random() * 4 - 2).toFixed(2);
+                const isPositive = parseFloat(change) >= 0;
+                
+                item.innerHTML = `
+                    <div class="ticker-name">${name}</div>
+                    <div class="ticker-value">${(Math.random() * 20000 + 5000).toFixed(2)}</div>
+                    <div class="ticker-change ${isPositive ? 'change-positive' : 'change-negative'}">
+                        ${isPositive ? '▲' : '▼'} ${Math.abs(change)}%
+                    </div>
+                `;
+                track.appendChild(item);
+            });
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('en-IN');
+        }
+
+        function updateMarketStatus() {
+            const now = new Date();
+            const day = now.getDay();
+            const hours = now.getHours();
+            const mins = now.getMinutes();
+            const totalMins = hours * 60 + mins;
+            
+            const wasOpen = state.isMarketOpen;
+            const isOpen = day > 0 && day < 6 && totalMins >= 555 && totalMins <= 930;
+            state.isMarketOpen = isOpen;
+            
+            if (wasOpen && !isOpen && Object.keys(state.lastData).length > 0) {
+                saveData(state.lastData, true);
+            }
+            
+            const statusEl = document.getElementById('marketStatus');
+            statusEl.className = isOpen ? 'market-status market-open' : 'market-status market-closed';
+            statusEl.innerHTML = isOpen 
+                ? '<span class="status-dot"></span> MARKET OPEN' 
+                : '<span class="status-dot"></span> MARKET CLOSED';
+            
+            const liveIndicator = document.getElementById('liveIndicator');
+            if (liveIndicator) {
+                liveIndicator.style.display = isOpen ? 'inline-flex' : 'none';
+            }
+        }
+
+        async function fetchKiteData() {
+            try {
+                const response = await fetch(`${API_BASE}/kite-data`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data && Object.keys(data).length > 0 && !data.error) {
+                        state.lastData = data;
+                        saveData(data);
+                        updateDisplay(data);
+                        updateLastUpdated();
+                        state.lastSource = 'Zerodha Kite (Real-time)';
+                    } else if (data.error) {
+                        console.error('API error:', data.error);
+                        document.getElementById('dataSource').textContent = 'Error: ' + data.error;
+                    }
+                } else {
+                    console.error('HTTP error:', response.status);
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+            }
+        }
+
+        function updateDisplay(data) {
+            Object.keys(data).forEach(key => {
+                const d = data[key];
+                if (!d || !d.value) return;
+                
+                const value = d.value;
+                const change = d.change || 0;
+                const percent = d.percentChange || 0;
+                const isPositive = change >= 0;
+                
+                const valueEl = document.getElementById(`${key}-value`);
+                if (valueEl) {
+                    valueEl.textContent = value.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                }
+                
+                const changeEl = document.getElementById(`${key}-change`);
+                if (changeEl) {
+                    const arrow = isPositive ? '▲' : '▼';
+                    const sign = isPositive ? '+' : '';
+                    const badgeClass = isPositive ? 'change-positive' : 'change-negative';
+                    
+                    changeEl.innerHTML = `
+                        <span class="change-badge ${badgeClass}">
+                            ${arrow} ${sign}${Math.abs(change).toFixed(2)}
+                        </span>
+                        <span class="change-badge ${badgeClass}">
+                            ${sign}${Math.abs(percent).toFixed(2)}%
+                        </span>
+                    `;
+                }
+                
+                ['open', 'high', 'low'].forEach(field => {
+                    const metaEl = document.getElementById(`${key}-${field}`);
+                    if (metaEl && d[field]) {
+                        metaEl.textContent = d[field].toLocaleString('en-IN', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    }
+                });
+            });
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-IN');
+            const showLive = state.isMarketOpen;
+            
+            document.getElementById('lastUpdated').innerHTML = `
+                <div class="live-indicator" style="display: ${showLive ? 'inline-flex' : 'none'}">
+                    <span class="live-dot"></span>
+                    LIVE
+                </div>
+                Last updated: ${timeStr}
+                <div class="data-source">${state.lastSource}</div>
+            `;
+        }
+
+        async function refreshData() {
+            const btn = event.target;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<span>⟳</span> Updating...';
+            btn.disabled = true;
+            
+            await fetchKiteData();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }, 1000);
+        }
+
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        function openShareModal() {
+            document.getElementById('shareUrl').value = window.location.href;
+            document.getElementById('shareModal').classList.add('active');
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('active');
+        }
+
+        function copyUrl() {
+            const input = document.getElementById('shareUrl');
+            input.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                closeShareModal();
+            }, 1500);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                fetchKiteData();
+            }
+        });
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
