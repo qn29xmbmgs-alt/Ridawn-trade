@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/kite-data",
+      "dest": "/api/kite-data.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
+```
+
+### **Make Sure Your File Structure is Correct:**
+```
+ridawn-stock-exchange/
+├── api/
+│   └── kite-data.js       ← Must be here
+├── index.html             ← Must be in root
+├── admin.html             ← Must be in root
+├── vercel.json            ← Must be in root
+└── package.json           ← Must be in root
