@@ -4,6 +4,6 @@
   "description": "Zerodha Kite Dashboard",
   "main": "api/kite-data.js",
   "dependencies": {
-    "kiteconnect": "^3.3.4"
+    "kiteconnect": "^4.1.0"
   }
 }
