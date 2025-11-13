@@ -676,7 +676,7 @@
     </div>
 
     <script>
-        const API_BASE = '/.netlify/functions';
+        const API_BASE = '/api'; // Changed from '/.netlify/functions' for Vercel
         const UPDATE_INTERVAL = 2000; // 2 seconds
 
         const state = {
@@ -853,4 +853,88 @@
                     `;
                 }
                 
-                ['open
+                ['open', 'high', 'low'].forEach(field => {
+                    const metaEl = document.getElementById(`${key}-${field}`);
+                    if (metaEl && d[field]) {
+                        metaEl.textContent = d[field].toLocaleString('en-IN', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    }
+                });
+            });
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-IN');
+            const showLive = state.isMarketOpen;
+            
+            document.getElementById('lastUpdated').innerHTML = `
+                <div class="live-indicator" style="display: ${showLive ? 'inline-flex' : 'none'}">
+                    <span class="live-dot"></span>
+                    LIVE
+                </div>
+                Last updated: ${timeStr}
+                <div class="data-source">${state.lastSource}</div>
+            `;
+        }
+
+        async function refreshData() {
+            const btn = event.target;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<span>⟳</span> Updating...';
+            btn.disabled = true;
+            
+            await fetchKiteData();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }, 1000);
+        }
+
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        function openShareModal() {
+            document.getElementById('shareUrl').value = window.location.href;
+            document.getElementById('shareModal').classList.add('active');
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('active');
+        }
+
+        function copyUrl() {
+            const input = document.getElementById('shareUrl');
+            input.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                closeShareModal();
+            }, 1500);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                fetchKiteData();
+            }
+        });
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
