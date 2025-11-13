@@ -323,39 +323,52 @@
     </div>
 
     <div class="instructions">
-        <h3>📝 Next Steps - Add Token to Vercel</h3>
+        <h3>📝 Instructions - Update Token in Vercel</h3>
+        <p style="color: #a0aec0; margin-bottom: 20px; line-height: 1.6;">
+            <strong>⚠️ IMPORTANT:</strong> Before generating token, make sure your Zerodha Kite app's 
+            <strong>Redirect URL</strong> is set to: <br>
+            <code style="background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px;">
+                https://your-vercel-domain.vercel.app/admin.html
+            </code>
+            <br>
+            <small style="color: #718096;">Update this in your <a href="https://developers.kite.trade/apps" target="_blank" style="color: #2563eb;">Kite Developer Console</a></small>
+        </p>
         <ol>
             <li>
                 <span class="step-number">1</span>
-                Click the "Generate New Access Token" button above
+                Click <strong>"Generate New Access Token"</strong> above
             </li>
             <li>
                 <span class="step-number">2</span>
-                Copy the generated token (click the copy button)
+                Login to Zerodha and authorize the app
             </li>
             <li>
                 <span class="step-number">3</span>
-                Go to your Vercel dashboard and select your project
+                Copy the generated token (click copy button)
             </li>
             <li>
                 <span class="step-number">4</span>
-                Navigate to: <strong>Settings</strong> → <strong>Environment Variables</strong>
+                Open <a href="https://vercel.com/dashboard" target="_blank" style="color: #2563eb;">Vercel Dashboard</a>
             </li>
             <li>
                 <span class="step-number">5</span>
-                Find <code>KITE_ACCESS_TOKEN</code> variable (or create it if it doesn't exist)
+                Select your project → <strong>Settings</strong> → <strong>Environment Variables</strong>
             </li>
             <li>
                 <span class="step-number">6</span>
-                Click <strong>Edit</strong> → Paste the new token → Click <strong>Save</strong>
+                Find <code>KITE_ACCESS_TOKEN</code> → Click <strong>Edit</strong>
             </li>
             <li>
                 <span class="step-number">7</span>
-                Go to <strong>Deployments</strong> tab → Click the ⋮ menu on latest deployment → <strong>Redeploy</strong>
+                Paste token → Click <strong>Save</strong>
             </li>
             <li>
                 <span class="step-number">8</span>
-                Wait 1-2 minutes for redeployment to complete ✅
+                Go to <strong>Deployments</strong> → Click ⋮ → <strong>Redeploy</strong>
+            </li>
+            <li>
+                <span class="step-number">9</span>
+                Wait 1-2 minutes ✅ Dashboard will now show live data!
             </li>
         </ol>
         <a href="https://vercel.com/dashboard" target="_blank" class="vercel-link">
