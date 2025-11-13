@@ -7,77 +7,62 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 2. Read all environment variables
+    // 2. Read environment variables
     const API_KEY = process.env.KITE_API_KEY;
     const API_SECRET = process.env.KITE_API_SECRET;
     const ACCESS_TOKEN = process.env.KITE_ACCESS_TOKEN;
 
-    // 3. Extract request_token from URL (sent by Admin page)
-    const { request_token } = req.query;
+    // 3. Look for request_token in QUERY (URL) or BODY
+    const request_token = req.query.request_token || (req.body && req.body.request_token);
 
-    console.log('=== Function Start ===');
-    console.log('Mode:', request_token ? 'TOKEN GENERATION' : 'DATA FETCHING');
+    console.log('=== Request Started ===');
+    console.log('Mode:', request_token ? 'GENERATING TOKEN' : 'FETCHING DATA');
 
     // ------------------------------------------
-    // MODE A: GENERATE NEW TOKEN (Admin Page)
+    // MODE A: GENERATE NEW TOKEN (For Admin Page)
     // ------------------------------------------
     if (request_token) {
       if (!API_KEY || !API_SECRET) {
-        console.error('Missing API Key or Secret for generation');
-        return res.status(500).json({ error: 'Configuration Error: KITE_API_KEY or KITE_API_SECRET is missing in Vercel Settings.' });
+        console.error('Missing API Keys in Vercel Settings');
+        return res.status(500).json({ error: 'Server Configuration Error: API_KEY or API_SECRET is missing.' });
       }
 
-      console.log('Attempting to generate session...');
       const kc = new KiteConnect({ api_key: API_KEY });
 
       try {
+        // Exchange the request_token for an access_token
         const response = await kc.generateSession(request_token, API_SECRET);
-        console.log('Session generated successfully!');
+        console.log('SUCCESS: Token Generated');
         
-        // Return the new token to the Admin Page
+        // Return the token to your Admin Page so you can copy it
         return res.status(200).json({ 
           status: 'success',
           access_token: response.access_token,
-          public_token: response.public_token 
+          public_token: response.public_token,
+          message: 'Token generated successfully!' 
         });
       } catch (kiteError) {
-        console.error('Kite Session Error:', kiteError);
-        return res.status(400).json({ error: 'Failed to generate token. ' + (kiteError.message || kiteError) });
+        console.error('Kite API Error:', kiteError);
+        return res.status(400).json({ error: 'Kite Error: ' + (kiteError.message || JSON.stringify(kiteError)) });
       }
     }
 
     // ------------------------------------------
-    // MODE B: FETCH DATA (Dashboard)
+    // MODE B: FETCH DATA (For Dashboard)
     // ------------------------------------------
-    
-    // If we are here, it means we are NOT generating a token.
-    // So we MUST have an existing ACCESS_TOKEN to proceed.
     if (!ACCESS_TOKEN) {
-      console.error('Missing Access Token');
-      return res.status(500).json({ error: 'Access token not configured. Please go to Admin Panel to generate one.' });
+      return res.status(500).json({ error: 'No Access Token found. Use Admin Panel to generate one.' });
     }
 
-    if (!API_KEY) {
-        return res.status(500).json({ error: 'API Key not configured' });
-    }
-
-    // Initialize Kite Connect with existing token
     const kc = new KiteConnect({
         api_key: API_KEY,
         access_token: ACCESS_TOKEN
     });
 
-    // Example: Fetch Indices Data
-    // (You can customize this list or logic as per your original dashboard needs)
-    const instruments = [
-        'NSE:NIFTY 50',
-        'NSE:NIFTY BANK',
-        'NSE:NIFTY MIDCAP 50',
-        'BSE:SENSEX'
-    ];
-
-    // Fetch Quotes
+    // Fetch real-time quotes
+    const instruments = ['NSE:NIFTY 50', 'NSE:NIFTY BANK', 'NSE:NIFTY MIDCAP 50', 'BSE:SENSEX'];
     const quotes = await kc.getQuote(instruments);
+    
     return res.status(200).json(quotes);
 
   } catch (error) {
@@ -85,4 +70,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }
-
