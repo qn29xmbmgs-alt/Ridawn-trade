@@ -1,6 +1,5 @@
 const KiteConnect = require("kiteconnect").KiteConnect;
-// --- Fixing the 'smart quote' checksum error ---
-
+// --- Final cache kill with new secret 5:25 PM ---
 export default async function handler(req, res) {
   // 1. Handle Preflight (CORS)
   if (req.method === 'OPTIONS') {
