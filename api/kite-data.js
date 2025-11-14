@@ -1,6 +1,5 @@
 const KiteConnect = require("kiteconnect").KiteConnect;
 // --- Fixing the 'smart quote' checksum error ---
-const KiteConnect = require("kiteconnect").KiteConnect;
 
 export default async function handler(req, res) {
   // 1. Handle Preflight (CORS)
