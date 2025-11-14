@@ -1,8 +1,7 @@
 {
   "name": "ridawn-trade",
   "version": "1.0.0",
-  "description": "Zerodha Kite Dashboard",
-  "main": "api/kite-data.js",
+  "description": "Kite API backend",
   "dependencies": {
     "kiteconnect": "^4.1.0"
   }
