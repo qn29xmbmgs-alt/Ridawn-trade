@@ -7,7 +7,5 @@
   "routes": [
     { "src": "/api/kite-data", "dest": "/api/kite-data.js" },
     { "src": "/(.*)", "dest": "/$1" }
-  ],
-
-  "note": "redeploy-trigger"
+  ]
 }
