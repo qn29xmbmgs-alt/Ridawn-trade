@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ridawn Stock Exchange - Live Market Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+```
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --primary-green: #16a34a;
+        --primary-red: #dc2626;
+        --dark-bg: #0f1419;
+        --card-bg: #1a1f2e;
+        --border-color: #2d3748;
+        --text-primary: #ffffff;
+        --text-secondary: #a0aec0;
+        --accent-blue: #2563eb;
+        --hover-bg: #252d3d;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+        color: var(--text-primary);
+        overflow-x: hidden;
+        min-height: 100vh;
+    }
+
+    .header {
+        background: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+        padding: 20px 40px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-content {
+        max-width: 1800px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: var(--text-primary);
+    }
+
+    .logo-accent {
+        color: var(--accent-blue);
+    }
+
+    .header-info {
+        display: flex;
+        gap: 30px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .time-display {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .market-status {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .market-open {
+        background: rgba(22, 163, 74, 0.15);
+        color: var(--primary-green);
+        border: 1px solid var(--primary-green);
+    }
+
+    .market-open .status-dot {
+        background: var(--primary-green);
+    }
+
+    .market-closed {
+        background: rgba(220, 38, 38, 0.15);
+        color: var(--primary-red);
+        border: 1px solid var(--primary-red);
+    }
+
+    .market-closed .status-dot {
+        background: var(--primary-red);
+    }
+
+    .controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: 1px solid var(--border-color);
+        background: var(--hover-bg);
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn:hover {
+        background: var(--accent-blue);
+        border-color: var(--accent-blue);
+        transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .main-container {
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 30px 40px;
+    }
+
+    .ticker-section {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 16px 0;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .ticker-container {
+        overflow: hidden;
+        position: relative;
+    }
+
+    .ticker-track {
+        display: flex;
+        animation: scroll 30s linear infinite;
+        gap: 16px;
+    }
+
+    @keyframes scroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    .ticker-item {
+        flex: 0 0 auto;
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-right: 1px solid var(--border-color);
+        white-space: nowrap;
+        transition: background 0.2s;
+    }
+
+    .ticker-item:hover {
+        background: var(--hover-bg);
+    }
+
+    .ticker-name {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .ticker-value {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ticker-change {
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 24px;
+        transition: opacity 0.3s ease;
+    }
+
+    .index-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 28px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .index-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent-blue), transparent);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s;
+    }
+
+    .index-card:hover {
+        border-color: var(--accent-blue);
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .index-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .card-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: var(--text-primary);
+    }
+
+    .card-icon {
+        font-size: 1.5rem;
+        opacity: 0.5;
+    }
+
+    .card-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 16px 0;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -1px;
+    }
+
+    .card-change {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .change-badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.875rem;
+        font-weight: 700;
+    }
+
+    .change-positive {
+        background: rgba(22, 163, 74, 0.15);
+        color: var(--primary-green);
+    }
+
+    .change-negative {
+        background: rgba(220, 38, 38, 0.15);
+        color: var(--primary-red);
+    }
+
+    .card-meta {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .meta-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .meta-value {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Stocks View Styles */
+    .stocks-view {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .stocks-view.active {
+        display: block;
+        opacity: 1;
+    }
+
+    .stocks-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+
+    .stocks-header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .back-btn {
+        padding: 10px 20px;
+        background: var(--hover-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .back-btn:hover {
+        background: var(--accent-blue);
+        border-color: var(--accent-blue);
+    }
+
+    .stocks-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .stocks-count {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .stocks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+    }
+
+    .stock-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 20px;
+        transition: all 0.2s;
+    }
+
+    .stock-card:hover {
+        border-color: var(--accent-blue);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+    }
+
+    .stock-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 12px;
+    }
+
+    .stock-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.3px;
+    }
+
+    .stock-price {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin: 8px 0;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .stock-change {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .stock-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .stock-meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .stock-meta-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+    }
+
+    .stock-meta-value {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--dark-bg);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.3s;
+    }
+
+    .loading.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid var(--border-color);
+        border-top-color: var(--accent-blue);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 32px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: var(--text-primary);
+    }
+
+    .modal-text {
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+    }
+
+    .share-input {
+        width: 100%;
+        padding: 12px;
+        background: var(--dark-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.875rem;
+        margin-bottom: 20px;
+    }
+
+    .share-options {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .share-btn {
+        padding: 10px 20px;
+        background: var(--accent-blue);
+        border: none;
+        border-radius: 6px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .share-btn:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .share-btn.secondary {
+        background: var(--hover-bg);
+        color: var(--text-primary);
+    }
+
+    .share-btn.secondary:hover {
+        background: var(--border-color);
+    }
+
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stocks-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .card-value {
+            font-size: 2rem;
+        }
+    }
+
+    .last-updated {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .data-source {
+        font-size: 0.7rem;
+        color: var(--primary-green);
+        margin-top: 4px;
+    }
+
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba(22, 163, 74, 0.15);
+        border: 1px solid var(--primary-green);
+        border-radius: 4px;
+        font-size: 0.7rem;
+        color: var(--primary-green);
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .live-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--primary-green);
+        border-radius: 50%;
+        animation: blink 1s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    .hidden {
+        display: none !important;
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+```
+<header class="header">
+    <div class="header-content">
+        <h1 class="logo">RIDAWN <span class="logo-accent">STOCK EXCHANGE</span></h1>
+        
+        <div class="header-info">
+            <div class="time-display" id="timeDisplay">00:00:00</div>
+            <div class="market-status market-closed" id="marketStatus">
+                <span class="status-dot"></span>
+                MARKET CLOSED
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="enterFullscreen()">
+                <span>⛶</span> Fullscreen
+            </button>
+            <button class="btn" onclick="refreshData()">
+                <span>↻</span> Refresh
+            </button>
+            <button class="btn" onclick="openShareModal()">
+                <span>📱</span> Share
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="main-container">
+    <div class="ticker-section">
+        <div class="ticker-container">
+            <div class="ticker-track" id="tickerTrack"></div>
+        </div>
+    </div>
+
+    <!-- Indices View -->
+    <div id="indicesView" class="main-grid">
+        <div class="index-card" onclick="showStocks('nifty50', 'NIFTY 50')">
+            <div class="card-header">
+                <h2 class="card-title">NIFTY 50</h2>
+                <span class="card-icon">📊</span>
+            </div>
+            <div class="card-value" id="nifty50-value">Loading...</div>
+            <div class="card-change" id="nifty50-change"></div>
+            <div class="card-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Open</span>
+                    <span class="meta-value" id="nifty50-open">---</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">High</span>
+                    <span class="meta-value" id="nifty50-high">---</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Low</span>
+                    <span class="meta-value" id="nifty50-low">---</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="index-card" onclick="showStocks('banknifty', 'BANK NIFTY')">
+            <div class="card-header">
+                <h2 class="card-title">BANK NIFTY</h2>
+                <span class="card-icon">🏦</span>
+            </div>
+            <div class="card-value" id="banknifty-value">Loading...</div>
+            <div class="card-change" id="banknifty-change"></div>
+            <div class="card-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Open</span>
+                    <span class="meta-value" id="banknifty-open">---</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">High</span>
+                    <span class="meta-value" id="banknifty-high">---</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Low</span>
+                    <span class="meta-value" id="banknifty-low">---</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="index-card" onclick="showStocks('niftymidcap', 'NIFTY MIDCAP 50')">
+            <div class="card-header">
+                <h2 class="card-title">NIFTY MIDCAP 50</h2>
+                <span class="card-icon">📈</span>
+            </div>
+            <div class="card-value" id="niftymidcap-value">Loading...</div>
+            <div class="card-change" id="niftymidcap-change"></div>
+            <div class="card-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Open</span>
+                    <span class="meta-value" id="niftymidcap-open">---</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">High</span>
+                    <span class="meta-value" id="niftymidcap-high">---</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Low</span>
+                    <span class="meta-value" id="niftymidcap-low">---</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="index-card" onclick="showStocks('sensex', 'SENSEX')">
+            <div class="card-header">
+                <h2 class="card-title">SENSEX</h2>
+                <span class="card-icon">💹</span>
+            </div>
+            <div class="card-value" id="sensex-value">Loading...</div>
+            <div class="card-change" id="sensex-change"></div>
+            <div class="card-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Open</span>
+                    <span class="meta-value" id="sensex-open">---</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">High</span>
+                    <span class="meta-value" id="sensex-high">---</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Low</span>
+                    <span class="meta-value" id="sensex-low">---</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stocks View -->
+    <div id="stocksView" class="stocks-view">
+        <div class="stocks-header">
+            <div class="stocks-header-left">
+                <button class="back-btn" onclick="showIndices()">
+                    <span>←</span> Back to Indices
+                </button>
+                <div>
+                    <h2 class="stocks-title" id="stocksIndexTitle">Stocks</h2>
+                    <div class="stocks-count" id="stocksCount">Loading...</div>
+                </div>
+            </div>
+        </div>
+        <div class="stocks-grid" id="stocksGrid"></div>
+    </div>
+</main>
+
+<div class="last-updated" id="lastUpdated">
+    <div class="live-indicator" id="liveIndicator" style="display: none;">
+        <span class="live-dot"></span>
+        LIVE
+    </div>
+    Last updated: Never
+    <div class="data-source" id="dataSource">Fetching data...</div>
+</div>
+
+<div class="modal" id="shareModal">
+    <div class="modal-content">
+        <h2 class="modal-title">Share Dashboard</h2>
+        <p class="modal-text">Share this URL to view the dashboard on any device:</p>
+        <input type="text" class="share-input" id="shareUrl" readonly>
+        <div class="share-options">
+            <button class="share-btn secondary" onclick="closeShareModal()">Cancel</button>
+            <button class="share-btn" onclick="copyUrl()">Copy URL</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = '/api';
+    const UPDATE_INTERVAL = 2000;
+
+    const state = {
+        lastData: {},
+        todayClosingData: {},
+        isMarketOpen: false,
+        lastSource: 'Zerodha Kite API',
+        currentView: 'indices',
+        currentIndex: null,
+        stocksUpdateInterval: null
+    };
+
+    const otherIndices = [
+        'NIFTY IT', 'NIFTY PHARMA', 'NIFTY AUTO', 'NIFTY FMCG', 'NIFTY METAL',
+        'NIFTY REALTY', 'NIFTY ENERGY', 'NIFTY INFRA', 'NIFTY PSU BANK',
+        'NIFTY PVT BANK', 'NIFTY MEDIA', 'NIFTY SMALLCAP'
+    ];
+
+    function init() {
+        loadPersistedData();
+        initializeTicker();
+        updateTime();
+        updateMarketStatus();
+        
+        fetchKiteData();
+        
+        setInterval(updateTime, 1000);
+        setInterval(updateMarketStatus, 60000);
+        setInterval(() => {
+            if (state.currentView === 'indices') {
+                fetchKiteData();
+            }
+        }, UPDATE_INTERVAL);
+        
+        setTimeout(() => {
+            document.getElementById('loading').classList.add('hidden');
+        }, 1000);
+    }
+
+    function loadPersistedData() {
+        try {
+            const saved = localStorage.getItem('ridawn_indices_data');
+            const closing = localStorage.getItem('ridawn_closing_data');
+            const closingDate = localStorage.getItem('ridawn_closing_date');
+            
+            if (saved) {
+                state.lastData = JSON.parse(saved);
+                updateDisplay(state.lastData);
+            }
+            
+            const today = new Date().toDateString();
+            if (closing && closingDate === today) {
+                state.todayClosingData = JSON.parse(closing);
+            }
+        } catch (error) {}
+    }
+
+    function saveData(data, isClosing = false) {
+        try {
+            if (isClosing) {
+                const today = new Date().toDateString();
+                localStorage.setItem('ridawn_closing_data', JSON.stringify(data));
+                localStorage.setItem('ridawn_closing_date', today);
+                state.todayClosingData = data;
+            } else {
+                localStorage.setItem('ridawn_indices_data', JSON.stringify(data));
+            }
+        } catch (error) {}
+    }
+
+    function initializeTicker() {
+        const track = document.getElementById('tickerTrack');
+        const items = [...otherIndices, ...otherIndices];
+        
+        items.forEach(name => {
+            const item = document.createElement('div');
+            item.className = 'ticker-item';
+            const change = (Math.random() * 4 - 2).toFixed(2);
+            const isPositive = parseFloat(change) >= 0;
+            
+            item.innerHTML = `
+                <div class="ticker-name">${name}
+```
