@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Testing API Connection</h1>
+    <div id="result">Loading...</div>
+    
+    <script>
+        console.log('Test script started');
+        
+        fetch('/api/kite-data')
+            .then(response => {
+                console.log('Response received:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Data:', data);
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            });
+    </script>
+</body>
+</html>
