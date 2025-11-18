@@ -57,7 +57,6 @@ module.exports = async (req, res) => {
 
   const requestToken = req.query.request_token;
 
-  // Handle token generation
   if (requestToken) {
     if (!API_KEY || !API_SECRET) {
       return res.status(500).json({ error: 'API credentials not configured' });
@@ -123,7 +122,6 @@ module.exports = async (req, res) => {
     }
   }
 
-  // Handle index stocks fetch
   const indexParam = req.query.index;
 
   if (indexParam && INDEX_CONSTITUENTS[indexParam]) {
@@ -200,7 +198,6 @@ module.exports = async (req, res) => {
     }
   }
 
-  // Handle main indices fetch
   if (!ACCESS_TOKEN || !API_KEY) {
     return res.status(500).json({ 
       error: 'Access token not configured. Please set ZERODHA_API_KEY and ZERODHA_ACCESS_TOKEN in Vercel environment variables.' 
