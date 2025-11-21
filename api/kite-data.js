@@ -13,7 +13,7 @@ const INDEX_CONSTITUENTS = {
     'NSE:TATASTEEL', 'NSE:HINDALCO', 'NSE:INDUSINDBK', 'NSE:CIPLA', 'NSE:DIVISLAB',
     'NSE:DRREDDY', 'NSE:EICHERMOT', 'NSE:GRASIM', 'NSE:HEROMOTOCO', 'NSE:JSWSTEEL',
     'NSE:APOLLOHOSP', 'NSE:BRITANNIA', 'NSE:SBILIFE', 'NSE:HDFCLIFE', 'NSE:BAJAJ-AUTO',
-    'NSE:TATACONSUM', 'NSE:ADANIENT', 'NSE:BPCL', 'NSE:UPL', 'NSE:LTIM'
+    'NSE:TATACONSUM', 'NSE:ADANIENT', 'NSE:BPCL', 'NSE:UPL', 'NSE:SHRIRAMFIN'
   ],
   banknifty: [
     'NSE:HDFCBANK', 'NSE:ICICIBANK', 'NSE:SBIN', 'NSE:KOTAKBANK', 'NSE:AXISBANK',
@@ -36,7 +36,7 @@ const INDEX_CONSTITUENTS = {
     'BSE:RELIANCE', 'BSE:TCS', 'BSE:HDFCBANK', 'BSE:INFY', 'BSE:ICICIBANK',
     'BSE:HINDUNILVR', 'BSE:ITC', 'BSE:SBIN', 'BSE:BHARTIARTL', 'BSE:KOTAKBANK',
     'BSE:LT', 'BSE:AXISBANK', 'BSE:ASIANPAINT', 'BSE:MARUTI', 'BSE:BAJFINANCE',
-    'BSE:HCLTECH', 'BSE:WIPRO', 'BSE:ULTRACEMCO', 'BSE:TITAN', 'BSE:SUNPHARMA',
+    'BSE:HCLTECH', 'BSE:WIPRO', 'NSE:ULTRACEMCO', 'BSE:TITAN', 'BSE:SUNPHARMA',
     'BSE:NESTLEIND', 'BSE:ONGC', 'BSE:NTPC', 'BSE:POWERGRID', 'BSE:M&M',
     'BSE:TECHM', 'BSE:TATAMOTORS', 'BSE:BAJAJFINSV', 'BSE:INDUSINDBK', 'BSE:TATASTEEL'
   ]
@@ -124,6 +124,90 @@ module.exports = async (req, res) => {
   }
 
   const indexParam = req.query.index;
+
+  // Handle ticker data request
+  if (isTicker) {
+    if (!ACCESS_TOKEN || !API_KEY) {
+      return res.status(500).json({ error: 'Access token not configured' });
+    }
+
+    try {
+      const tickerInstruments = [
+        'NSE:NIFTY IT',
+        'NSE:NIFTY PHARMA',
+        'NSE:NIFTY AUTO',
+        'NSE:NIFTY FMCG',
+        'NSE:NIFTY METAL',
+        'NSE:NIFTY REALTY',
+        'NSE:NIFTY ENERGY',
+        'NSE:NIFTY INFRA',
+        'NSE:NIFTY PSU BANK',
+        'NSE:NIFTY PVT BANK',
+        'NSE:NIFTY MEDIA',
+        'NSE:NIFTY HEALTHCARE'
+      ];
+
+      const instrumentsQuery = tickerInstruments.map(i => `i=${encodeURIComponent(i)}`).join('&');
+
+      const options = {
+        hostname: 'api.kite.trade',
+        port: 443,
+        path: '/quote?' + instrumentsQuery,
+        method: 'GET',
+        headers: {
+          'Authorization': `token ${API_KEY}:${ACCESS_TOKEN}`,
+          'X-Kite-Version': '3'
+        }
+      };
+
+      return new Promise((resolve) => {
+        const request = https.request(options, (response) => {
+          let data = '';
+          response.on('data', (chunk) => { data += chunk; });
+          response.on('end', () => {
+            try {
+              const jsonData = JSON.parse(data);
+              
+              if (jsonData.status === 'success') {
+                const result = {};
+                
+                tickerInstruments.forEach(instrument => {
+                  const quote = jsonData.data[instrument];
+                  if (quote) {
+                    const lastPrice = quote.last_price;
+                    const prevClose = quote.ohlc.close;
+                    result[instrument] = {
+                      value: lastPrice,
+                      change: lastPrice - prevClose,
+                      percentChange: ((lastPrice - prevClose) / prevClose) * 100
+                    };
+                  }
+                });
+
+                res.status(200).json(result);
+              } else {
+                res.status(400).json({ error: jsonData.message || 'API error' });
+              }
+              resolve();
+            } catch (err) {
+              res.status(500).json({ error: 'Failed to parse response: ' + err.message });
+              resolve();
+            }
+          });
+        });
+        
+        request.on('error', (error) => {
+          res.status(500).json({ error: error.message });
+          resolve();
+        });
+        
+        request.end();
+      });
+
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
 
   if (indexParam && INDEX_CONSTITUENTS[indexParam]) {
     if (!ACCESS_TOKEN || !API_KEY) {
